@@ -27,6 +27,14 @@
           <itemPath>../src/config/default/interrupts.h</itemPath>
         </logicalFolder>
       </logicalFolder>
+      <logicalFolder name="Exception_Dump_Mips"
+                     displayName="Exception_Dump_Mips"
+                     projectFiles="true">
+        <itemPath>../MIPS/Exception_Dump_Mips/include/exception_dump_mips.h</itemPath>
+        <itemPath>../MIPS/Exception_Dump_Mips/include/exception_dump_mips_config.h</itemPath>
+        <itemPath>../MIPS/Exception_Dump_Mips/include/exception_dump_mips_target.h</itemPath>
+        <itemPath>../MIPS/Exception_Dump_Mips/include/exception_dump_mips_port.h</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
