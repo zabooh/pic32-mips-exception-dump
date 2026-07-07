@@ -255,7 +255,7 @@ the variable to watch.
 | `tools/create_listing.bat` | Windows batch **template**: ELF → disassembly listing + symbols (adapt per project). |
 | `tools/analyze_dump.py` | Python **template**: clipboard dump → WHAT/WHY/WHERE. Self-generates the listing (`xc32-objdump`), resolves `epc`/`ra` to function + file:line (`xc32-addr2line`), full register evaluation, detects unaligned `swl/swr`, flags an ELF/dump build mismatch. |
 | `tools/reading_the_dump.md` | How to locate an exception (`epc`/`ra`/`badvaddr`) in the listing (manual method). |
-| `README.md` | Full documentation. |
+| `../../README.md` | Full documentation (repo root): library docs + the runnable PIC32MM example. |
 
 ---
 
