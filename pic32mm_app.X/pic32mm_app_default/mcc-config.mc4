@@ -1,0 +1,50 @@
+configVersion: 1.0.0
+coreVersion: 5.8.4
+spaHostVersion: 1.2.1
+device: PIC32MM0256GPM064
+deviceLibrary: {}
+groupModules: []
+modules:
+- core
+- dfp
+- stdio
+- uart1
+generatedFileHashHistoryMap:
+- file: ..\src\config\default\definitions.h
+  hash: 49462356b4bb0f57cd9371f861c2826731596006564e94a49ef1fe082ed84aa9
+- file: ..\src\config\default\device.h
+  hash: 10ec93c43a7b158a129ae05bd8f4a59ff5bcf3d0f3f062fdd64c374bc2d42099
+- file: ..\src\config\default\exceptions.c
+  hash: a0d5f1a371582511cfa0a062660bf0b39ee3a603a96410ce5c7286b3ce1b1144
+- file: ..\src\config\default\initialization.c
+  hash: add22b7018feeaa93089f233a6cd892b6fa08431d9ad4bab9e6ce279f3463a0c
+- file: ..\src\config\default\interrupts.c
+  hash: 15293fcc2450a1caa2944513770b31b5b0fb71918c31ec9a9c9b497b679b6f5f
+- file: ..\src\config\default\interrupts.h
+  hash: 759cce8ff415eadadd85a74232a5023d73e8859a4556ef4beb93c2cfd4b8d8ef
+- file: ..\src\config\default\p32MM0256GPM064.ld
+  hash: b08ab7a492ffa734426f71d5b358132c3863b6c3bfab706f0a7608259882bd6c
+- file: ..\src\config\default\peripheral\clk\plib_clk.c
+  hash: 76ef5f45f7e182cba1e53d67ba9b2cc9fafd77dded9f739e4e27f91e237bde93
+- file: ..\src\config\default\peripheral\clk\plib_clk.h
+  hash: 35384f2e13e59b7190bf77f6996baf3ea2377ec42df94979a6f793326def5255
+- file: ..\src\config\default\peripheral\evic\plib_evic.c
+  hash: 8938f37d20a1f8543e5e5c8f650d58ddfa6ed09e857661fa576b718d50c9c9eb
+- file: ..\src\config\default\peripheral\evic\plib_evic.h
+  hash: 31dd4fb9b8a2e88ca7fb7b35ceb5887dda0f6dacd099174385db8a2433aec6de
+- file: ..\src\config\default\peripheral\gpio\plib_gpio.c
+  hash: 0b4f1a2004bb32d619dda73085cb4525908537430b2567e274638afc18c2a0d8
+- file: ..\src\config\default\peripheral\gpio\plib_gpio.h
+  hash: ef55b889aedfc59e020698ff0b992e12f48798c81356604315694995dfbf2657
+- file: ..\src\config\default\peripheral\uart\plib_uart1.c
+  hash: 3f1434d96a71b8a069988ad0044f2020cb04d36d9283ee983d0244037c008fea
+- file: ..\src\config\default\peripheral\uart\plib_uart1.h
+  hash: a81dc8d9aa0a025c29fd313911436575f2ced8737a94068eb914428b77053392
+- file: ..\src\config\default\peripheral\uart\plib_uart_common.h
+  hash: 70213cd740b3ff9a591d93ad6aac9493335851db084dd862275effacdebf710d
+- file: ..\src\config\default\stdio\xc32_monitor.c
+  hash: 34c7efa285dd6778faf01a0097bf7bebc131e7a8a0ed97bb737ff3e0a39895d2
+- file: ..\src\config\default\toolchain_specifics.h
+  hash: b4de6e02e3e48c62f7ba233405ffdf6ef31bb971d1a7b49efa1676f45cabc1ac
+- file: ..\src\main.c
+  hash: d3c233d419e6304bfacbafc18cc68c0f5c26e365f23b20ea40ccfac458f664c5
