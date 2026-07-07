@@ -26,6 +26,13 @@ device, UART transport, handler conflicts) and performs the wiring for you —
 including adapting your MPLAB X project so the files show up in the tree and build.
 See [Use the library in your own project](#use-the-library-in-your-own-project).
 
+The Claude Code route has a further payoff **later, when you are actually chasing
+a bug**: Claude already holds the full context — your source, how the library is
+wired in, and (via the analyzer) the decoded dump with cause, registers and the
+faulting `file:line`. So it can go straight from "here is the crash" to genuinely
+**analyzing and fixing the root cause** with you, instead of you re-explaining the
+project from scratch.
+
 There are **two ways to get the dump out of the device:**
 
 - **With a debugger (Mode A):** on the exception the handler halts and you read
