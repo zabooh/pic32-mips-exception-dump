@@ -516,6 +516,15 @@ image.)
   integration, and generates the project-specific analyzer — using **this PIC32MM
   project as the reference template**.
 
+  As part of that, Claude Code **adapts your MPLAB X project configuration**
+  (`<your-project>.X/nbproject/configurations.xml`) directly: it adds the library
+  **source files** (so they compile and link), registers the library **headers**,
+  and appends the library `include/` folder to the **include path** (in the `C32`
+  and `C32CPP` blocks). So the library files become **visible in the MPLAB X
+  project tree** and are **picked up by the build** — no manual *Add Existing
+  Item…* clicking. MPLAB X regenerates its makefiles from `configurations.xml`
+  the next time you open or build the project.
+
 ## File map
 
 Repo-level:

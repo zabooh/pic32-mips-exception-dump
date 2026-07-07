@@ -134,6 +134,38 @@ result.
 > Reminder: `include/…`, `src/…`, `examples/…` below are under
 > `MIPS/Exception_Dump_Mips/`.
 
+### How you (Claude) wire the files into the user's MPLAB X project
+
+You can perform the file/build registration **for the user** by editing their
+project's `<their-project>.X/nbproject/configurations.xml` directly — no manual
+clicking in the IDE — so the library shows up in the **MPLAB X project tree** and
+is picked up by the **build**. Edit three things:
+
+- **Source files (compiled + linked):** add an `<itemPath>` for each library
+  source (`…/src/exception_dump_mips.c`, `…/src/exception_dump_mips_port.c` for
+  Mode B, and `…/src/exception_dump_mips_vector.S` only if the project has no
+  vector) inside `<logicalFolder name="SourceFiles">`. Group them in a sub-folder,
+  e.g. `<logicalFolder name="Exception_Dump_Mips">`.
+- **Header files (tree + indexing):** add an `<itemPath>` for each library header
+  (`exception_dump_mips.h`, `…_config.h`, `…_target.h`, `…_port.h`) inside
+  `<logicalFolder name="HeaderFiles">`. This is display/indexing only — not
+  required to build, but expected for a complete project tree.
+- **Include path:** append the library `include/` folder to the
+  `extra-include-directories` property in **both** the `C32` **and** `C32CPP`
+  blocks (semicolon-separated). This is what actually lets the compiler find the
+  headers.
+
+Use paths **relative to the `.X` folder** (e.g. `../MIPS/Exception_Dump_Mips/...`
+if the library sits alongside, or wherever the user placed it). MPLAB X
+**regenerates the `Makefile-*.mk` from `configurations.xml`** when the project is
+next opened/built, so these edits are the durable way to wire the files in —
+equivalent to *Add Existing Item…* + *Project Properties → xc32-gcc → Include
+directories* in the GUI. After editing, **tell the user to reopen/build in MPLAB
+X** so the makefiles regenerate, and confirm the files appear in the tree.
+
+The bundled example's `pic32mm_app.X/nbproject/configurations.xml` is a
+worked reference of exactly these three edits.
+
 ### Common to both modes
 1. Add the include path to `MIPS/Exception_Dump_Mips/include/`.
 2. Add `MIPS/Exception_Dump_Mips/src/exception_dump_mips.c` to the MPLAB X project.
