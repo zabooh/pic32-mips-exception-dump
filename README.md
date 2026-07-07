@@ -16,6 +16,16 @@ This repository bundles two things:
    play the whole flow through **in the MPLAB X Simulator** — capture, reset,
    print, and analyze.
 
+**Two ways to work with this project.** To add the library to your *own* firmware
+you can either **read this README carefully** and follow the
+[Integration Steps](#integration-steps) by hand, or **let Claude Code do it**: the
+repo ships a [`CLAUDE.md`](CLAUDE.md) at its root — open the repo in
+[Claude Code](https://claude.com/claude-code) and just run it. Claude then walks
+you through the integration with a short **interview** (capture mode, target
+device, UART transport, handler conflicts) and performs the wiring for you —
+including adapting your MPLAB X project so the files show up in the tree and build.
+See [Use the library in your own project](#use-the-library-in-your-own-project).
+
 There are **two ways to get the dump out of the device:**
 
 - **With a debugger (Mode A):** on the exception the handler halts and you read
