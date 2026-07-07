@@ -181,6 +181,17 @@ void SYS_Initialize ( void* data )
 
 
   
+    /* =======================================================================
+     * SIMULATOR NOTE  —  keep CLK_Initialize() COMMENTED OUT for the Simulator.
+     *
+     * The clock / PLL bring-up in CLK_Initialize() polls oscillator status bits
+     * (e.g. the PLL-lock / clock-ready flags) that the MPLAB X Simulator does
+     * NOT model. With the call enabled the CPU spins there forever and never
+     * reaches the exception-dump demo, so it looks like the simulator "hangs".
+     *
+     * ==> To run on REAL PIC32MM HARDWARE, RE-ENABLE this line (remove the
+     *     leading "//") so the device clocks are actually configured.
+     * ======================================================================= */
  //   CLK_Initialize();
 
 

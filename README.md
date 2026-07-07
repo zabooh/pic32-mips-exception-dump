@@ -105,6 +105,18 @@ pic32mm_app/                         <- this repo (a Harmony 3 PIC32MM project)
 
 ## Play it through in the simulator (quick start)
 
+> ### ⚠️ Simulator prerequisite — keep `CLK_Initialize()` commented out
+>
+> In [`src/config/default/initialization.c`](src/config/default/initialization.c)
+> the line **`// CLK_Initialize();` must stay commented out** for the MPLAB X
+> Simulator. Its clock/PLL bring-up polls oscillator-ready / PLL-lock bits that
+> the simulator does **not** model, so with the call enabled the CPU **spins
+> there forever** and never reaches the crash demo — it looks like the simulator
+> hangs.
+>
+> **➡️ For a run on real PIC32MM hardware, re-enable that line** (remove the
+> leading `//`) so the device clocks are configured.
+
 1. Open `pic32mm_app.X` in **MPLAB X** (device: PIC32MM0256GPM064, XC32).
 2. Build and run on the **Simulator**. `main()` calls `foo_ex()`, which
    deliberately dereferences a near-NULL pointer → a MIPS **Data bus error**.
