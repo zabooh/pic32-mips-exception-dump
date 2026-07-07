@@ -593,3 +593,14 @@ Library ([`MIPS/Exception_Dump_Mips/`](MIPS/Exception_Dump_Mips/)):
   [Target Architecture](#target-architecture-incl-pic32mm) and
   [`CLAUDE.md`](CLAUDE.md).
 - Persistent-RAM dumps survive only a **warm/software reset**, not power-on/BOR.
+
+## License
+
+The library and the original example/tooling in this repo are released under the
+**MIT License** — see [`LICENSE`](LICENSE). You may use, modify and redistribute
+them (including commercially); just keep the copyright/license notice.
+
+Note: the MPLAB Harmony-generated files under `src/config/default/` carry
+**Microchip's own license** (see their file headers) and are included only to
+make the example build and run. The MIT license covers this project's original
+code, not those third-party generated files.
