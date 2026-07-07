@@ -46,6 +46,8 @@ and shows the **source-code line that caused it** (function, file path, line).
 
 ```
 pic32mm_app/                         <- this repo (a Harmony 3 PIC32MM project)
+├─ README.md                         <- full documentation (start here)
+├─ CLAUDE.md                         <- guide for Claude Code assisted integration
 ├─ pic32mm_app.X/                    <- MPLAB X project
 │  ├─ nbproject/                     <- project definition (build config)
 │  ├─ analyze_dump.py                <- project-specific dump analyzer
@@ -54,8 +56,7 @@ pic32mm_app/                         <- this repo (a Harmony 3 PIC32MM project)
 │  ├─ main.c                         <- init + Mode B wiring + foo_ex() crash demo
 │  └─ config/default/                <- Harmony-generated code (UART1, clocks, ...)
 └─ MIPS/Exception_Dump_Mips/         <- THE LIBRARY (reusable, framework-independent)
-   ├─ include/  src/  tools/  docs/
-   └─ CLAUDE.md                      <- guide for Claude Code assisted integration
+   └─ include/  src/  tools/  docs/
 ```
 
 ## Play it through in the simulator (quick start)
@@ -507,21 +508,22 @@ image.)
   `include/` + `src/` from [`MIPS/Exception_Dump_Mips/`](MIPS/Exception_Dump_Mips/)
   into your project, wire an output callback, resolve the handler/vector, and
   pick a capture mode.
-- **Guided with Claude Code (much faster):** open
-  [`MIPS/Exception_Dump_Mips/`](MIPS/Exception_Dump_Mips/) in
-  [Claude Code](https://claude.com/claude-code) and say *"integrate the MIPS
-  exception dump library into my project"* (or *"read CLAUDE.md"*).
-  [`CLAUDE.md`](MIPS/Exception_Dump_Mips/CLAUDE.md) drives an interview-driven
-  session (capture mode, target device, UART transport, handler conflicts),
-  performs the integration, and generates the project-specific analyzer — using
-  **this PIC32MM project as the reference template**.
+- **Guided with Claude Code (much faster):** clone this repo, open its **root**
+  in [Claude Code](https://claude.com/claude-code), and say *"integrate the MIPS
+  exception dump library into my project"* (or *"read CLAUDE.md"*). The root
+  [`CLAUDE.md`](CLAUDE.md) is auto-loaded; it drives an interview-driven session
+  (capture mode, target device, UART transport, handler conflicts), performs the
+  integration, and generates the project-specific analyzer — using **this PIC32MM
+  project as the reference template**.
 
 ## File map
 
-Repo-level (the example project):
+Repo-level:
 
 | Path | Description |
 |------|-------------|
+| `README.md` | This file — full documentation (library + example). |
+| `CLAUDE.md` | Guide for Claude Code to assist an interview-driven integration (auto-loaded at the repo root). |
 | `src/main.c` | Init + Mode B wiring + `foo_ex()` crash demo. |
 | `pic32mm_app.X/` | MPLAB X project (build config, device PIC32MM0256GPM064). |
 | `pic32mm_app.X/analyze_dump.py` | Project-specific dump analyzer (clipboard → analysis). |
@@ -543,7 +545,6 @@ Library ([`MIPS/Exception_Dump_Mips/`](MIPS/Exception_Dump_Mips/)):
 | `tools/create_listing.bat` | Windows batch template: ELF → disassembly listing + symbol table. |
 | `tools/analyze_dump.py` | Python template: clipboard dump → WHAT/WHY/WHERE exception analysis. |
 | `tools/reading_the_dump.md` | How to locate an exception (`epc`/`ra`/`badvaddr`) in the listing. |
-| `CLAUDE.md` | Guide for Claude Code to assist an interview-driven integration. |
 
 ## Notes
 
@@ -552,5 +553,5 @@ Library ([`MIPS/Exception_Dump_Mips/`](MIPS/Exception_Dump_Mips/)):
 - The example enables full GPR capture on PIC32MM (`-DEDM_CAPTURE_GPR=1` + the
   microMIPS exception vector). The library default for PIC32MM is CP0-only; see
   [Target Architecture](#target-architecture-incl-pic32mm) and
-  [`CLAUDE.md`](MIPS/Exception_Dump_Mips/CLAUDE.md).
+  [`CLAUDE.md`](CLAUDE.md).
 - Persistent-RAM dumps survive only a **warm/software reset**, not power-on/BOR.

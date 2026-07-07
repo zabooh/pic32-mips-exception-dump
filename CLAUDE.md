@@ -1,17 +1,36 @@
-# CLAUDE.md — PIC32 / MIPS Exception Dump Library
+# CLAUDE.md — PIC32 / MIPS Exception Dump
 
-> This file is auto-loaded when a user opens Claude Code in this directory.
-> It tells you (Claude) what this project is and how to help the user add the
-> library to their own PIC32/MIPS firmware project.
+> This file is auto-loaded when a user opens Claude Code in the **root of this
+> repo**. It tells you (Claude) what this repo is and how to help the user add
+> the exception-dump library to their own PIC32/MIPS firmware project.
 
 ---
 
-## 1. What this project is (say this to the user up front)
+## 0. Repository layout (read this first)
 
-This directory is a **reusable, portable C library that captures a MIPS/PIC32
-CPU exception (crash) dump** — the CP0 registers (`Cause`, `EPC`, `Status`,
-`BadVAddr`) and, where possible, the general-purpose registers — and makes them
-available for post-mortem debugging.
+This repo bundles two things:
+
+- **The library** — the reusable exception-dump code — in
+  **`MIPS/Exception_Dump_Mips/`** (`include/`, `src/`, `tools/`, `examples/`,
+  `docs/`).
+- **A runnable PIC32MM example** — a Harmony 3 project (`pic32mm_app.X/` + `src/`)
+  that integrates the library and deliberately crashes in `foo_ex()` so the whole
+  capture → reset → print → analyze flow can be played through in the MPLAB X
+  Simulator. The full documentation is the repo-root [`README.md`](README.md).
+
+**Path convention in this file:** references like `include/…`,
+`src/exception_dump_mips*`, `tools/…`, `examples/…` are shown with the
+**`MIPS/Exception_Dump_Mips/`** prefix — they mean the library copy. The
+**repo-root `src/` and `pic32mm_app.X/` are the example app, not the library.**
+
+---
+
+## 1. What the library is (say this to the user up front)
+
+`MIPS/Exception_Dump_Mips/` is a **reusable, portable C library that captures a
+MIPS/PIC32 CPU exception (crash) dump** — the CP0 registers (`Cause`, `EPC`,
+`Status`, `BadVAddr`) and, where possible, the general-purpose registers — and
+makes them available for post-mortem debugging.
 
 It targets the **PIC32M / MIPS family only** (PIC32MX / PIC32MZ / PIC32MZW1 /
 WFI32 / PIC32MK / PIC32MM), XC32 compiler. It is **not** for Cortex-M / SAM
@@ -23,14 +42,15 @@ application through callbacks / weak port functions.
 
 ---
 
-## 2. How to behave when a user opens this directory
+## 2. How to behave when a user opens this repo
 
 On your **first response** in a fresh session here, proactively:
 
-1. In 2–3 sentences, tell the user this is the PIC32/MIPS Exception Dump library
-   and what it does (see §1).
-2. **Offer to integrate it into their project.** Ask for the path to their
-   MPLAB X project if you don't have it yet.
+1. In 2–3 sentences, tell the user this repo contains the PIC32/MIPS Exception
+   Dump library (in `MIPS/Exception_Dump_Mips/`) plus a runnable PIC32MM example
+   they can try in the simulator (see the root `README.md`).
+2. **Offer to integrate the library into their project.** Ask for the path to
+   their MPLAB X project if you don't have it yet.
 3. If they accept, run the **Integration Interview** (§3) *before* editing
    anything. Do not copy files or change build settings until the mode and
    target are decided.
@@ -63,14 +83,14 @@ most important** and decides the whole integration shape.
 
 PIC32MZ / PIC32MZW1 (WFI32) / PIC32MX / PIC32MK / **PIC32MM**.
 Usually auto-detected from XC32 device macros, but confirm — it changes defaults
-(see §6). **PIC32MM** in particular switches to CP0-only capture, a small
-buffer, and the microMIPS flag.
+(see §6). **PIC32MM** in particular defaults to CP0-only capture, a small
+buffer, and the microMIPS flag (full GPR capture also works on PIC32MM — see §5).
 
 ### Q3 — (Mode B only) Output transport?
 
 How should the stored dump be printed on reboot? e.g. Harmony `SYS_CONSOLE_PRINT`,
 a bare UART `Ux TXREG` poll loop, `printf`/stdio, or a USB-CDC console. This
-becomes the output callback.
+becomes the output callback. (The bundled example uses `printf`/stdio → UART1.)
 
 ### Q4 — Does the project already have an exception handler / vector?
 
@@ -85,32 +105,41 @@ Ask the user: **"Shall I create a Windows batch job for your project that
 generates a disassembly listing from your ELF, so you can locate an exception by
 its address?"**
 
-If yes, adapt the templates in `tools/` (see §11) to the user's XC32 version and
-ELF path. Whether or not they want the batch, point them to
-[`tools/reading_the_dump.md`](tools/reading_the_dump.md), which explains how to
-turn a dump (`epc`, `ra`, `badvaddr`, cause) into an exact source line.
+If yes, adapt the templates in `MIPS/Exception_Dump_Mips/tools/` (see §11) to the
+user's XC32 version and ELF path. Whether or not they want the batch, point them
+to
+[`MIPS/Exception_Dump_Mips/tools/reading_the_dump.md`](MIPS/Exception_Dump_Mips/tools/reading_the_dump.md),
+which explains how to turn a dump (`epc`, `ra`, `badvaddr`, cause) into an exact
+source line.
 
 ### Q6 — Create a Python dump analyzer? (offer this)
 
 Ask the user: **"Shall I write a Python program that reads the UART dump from
 your clipboard and analyses the exception — what happened, why, and where?"**
 
-If yes, adapt [`tools/analyze_dump.py`](tools/analyze_dump.py) to their project
-(see §11): it reads the dump from the clipboard (or a file), decodes the cause,
-applies WHY heuristics (NULL pointer, misalignment, bad function pointer, PC
-corruption...), and — when pointed at the disassembly listing from Q5 — resolves
-`epc`/`ra` to functions and source lines. Wiring in the listing path makes Q5 and
-Q6 work together.
+If yes, adapt
+[`MIPS/Exception_Dump_Mips/tools/analyze_dump.py`](MIPS/Exception_Dump_Mips/tools/analyze_dump.py)
+to their project (see §11): it reads the dump from the clipboard (or a file),
+**generates the disassembly listing itself** (`xc32-objdump`), decodes the cause,
+applies WHY heuristics (NULL / near-NULL pointer, misalignment, bad function
+pointer, PC corruption…), does a full register evaluation, and resolves
+`epc`/`ra` to functions + source `file:line` via `xc32-addr2line`. The
+`pic32mm_app.X/analyze_dump.py` in this repo is a ready reference of the adapted
+result.
 
 ---
 
 ## 4. Integration steps
 
+> Reminder: `include/…`, `src/…`, `examples/…` below are under
+> `MIPS/Exception_Dump_Mips/`.
+
 ### Common to both modes
-1. Add the include path to `include/`.
-2. Add `src/exception_dump_mips.c` to the MPLAB X project.
+1. Add the include path to `MIPS/Exception_Dump_Mips/include/`.
+2. Add `MIPS/Exception_Dump_Mips/src/exception_dump_mips.c` to the MPLAB X project.
 3. Confirm the target (Q2). Auto-detected from `<xc.h>`; force with
-   `-DEDM_TARGET_PIC32MM` (etc.) if needed. See `include/exception_dump_mips_target.h`.
+   `-DEDM_TARGET_PIC32MM` (etc.) if needed. See
+   `MIPS/Exception_Dump_Mips/include/exception_dump_mips_target.h`.
 4. Resolve the handler-symbol conflict (Q4 / §5).
 
 ### Mode A — Debugger / breakpoint
@@ -119,11 +148,12 @@ Q6 work together.
    `EDM_PERSIST_ATTR` to nothing (e.g. `-DEDM_PERSIST_ATTR=`). You may also leave
    it persistent — harmless.
 7. GPR capture: on PIC32MZ/MX the default gives full GPRs; you need the assembly
-   vector present (project's own, or add `src/exception_dump_mips_vector.S` if
-   the project has none). On PIC32MM the default is CP0-only, but full GPR
-   capture also works — add the vector `.S` and build with `-DEDM_CAPTURE_GPR=1`
-   (the vector passes the frame base to the handler in `a2`; verified on
-   microMIPS). Leave `EDM_CAPTURE_GPR=0` if you only need the CP0 registers.
+   vector present (project's own, or add
+   `MIPS/Exception_Dump_Mips/src/exception_dump_mips_vector.S` if the project has
+   none). On PIC32MM the default is CP0-only, but full GPR capture also works —
+   add the vector `.S` and build with `-DEDM_CAPTURE_GPR=1` (the vector passes the
+   frame base to the handler in `a2`; verified on microMIPS). Leave
+   `EDM_CAPTURE_GPR=0` if you only need the CP0 registers.
 8. Build, flash with debugger, provoke a crash. When it halts, add
    **`edm_dump.msg`** (and optionally `edm_excep_code` / `edm_excep_addr`) to a
    Watch window and read the decoded dump. No output callback needed.
@@ -138,16 +168,19 @@ Q6 work together.
      works with the stock linker script (`.persist`). Nothing to do.
    - **Custom section:** `-DEDM_PERSIST_ATTR=__attribute__((section(".exception_dump_noinit")))`
      plus a `NOLOAD` section in the `.ld` (snippet in
-     `examples/baremetal_pic32_example/integration_notes.md`).
-7. Add `src/exception_dump_mips_port.c` (weak default reset = SYSKEY/RSWRST), or
-   register a custom reset with `exception_dump_mips_set_reset_callback()`.
+     `MIPS/Exception_Dump_Mips/examples/baremetal_pic32_example/integration_notes.md`).
+7. Add `MIPS/Exception_Dump_Mips/src/exception_dump_mips_port.c` (weak default
+   reset = SYSKEY/RSWRST), or register a custom reset with
+   `exception_dump_mips_set_reset_callback()`.
 8. Early in startup, once the console/UART is ready:
    ```c
    exception_dump_mips_init();
    exception_dump_mips_set_output_callback(my_putc, my_puts /* or NULL */);
    exception_dump_mips_check_and_print_previous();   /* prints + clears once */
    ```
-   Wire `my_putc`/`my_puts` to the transport from Q3 (see `examples/`).
+   Wire `my_putc`/`my_puts` to the transport from Q3 (see
+   `MIPS/Exception_Dump_Mips/examples/`, and `src/main.c` in this repo for a
+   printf/stdio wiring).
 9. Build, provoke a crash, confirm the device resets and prints the dump once on
    reboot; a second clean reset prints nothing.
 
@@ -164,7 +197,7 @@ There must be **exactly one** `_general_exception_handler` and **one**
   - set `-DEDM_INSTALL_GENERAL_HANDLER=0` and keep the project's handler, using
     only this library's persistent-storage + print helpers (you then lose the
     automatic register capture unless you call the capture logic yourself).
-- **The assembly vector `src/exception_dump_mips_vector.S`:**
+- **The assembly vector `MIPS/Exception_Dump_Mips/src/exception_dump_mips_vector.S`:**
   - **Harmony / MCC / Melody projects usually already generate it** → do **not**
     add the `.S`, use theirs.
   - **Bare-metal projects** with no vector → add the `.S`.
@@ -178,9 +211,10 @@ There must be **exactly one** `_general_exception_handler` and **one**
     `EDM_STACK_FRAME_BYTES` + the `*_IDX` macros, or set `-DEDM_CAPTURE_GPR=0`
     (CP0-only, always safe).
   - **PIC32MM:** the shipped `.S` assembles as microMIPS and full GPR capture is
-    **verified working** (`-DEDM_CAPTURE_GPR=1` + add the `.S`). Confirm at
-    runtime with the analyzer: for an aligned `lw`/`sw` fault, base+offset must
-    equal `badvaddr` (the analyzer prints a MISMATCH otherwise).
+    **verified working** (`-DEDM_CAPTURE_GPR=1` + add the `.S`) — this is what the
+    bundled example does. Confirm at runtime with the analyzer: for an aligned
+    `lw`/`sw` fault, base+offset must equal `badvaddr` (the analyzer prints a
+    MISMATCH otherwise).
 
 ---
 
@@ -189,9 +223,10 @@ There must be **exactly one** `_general_exception_handler` and **one**
 Two headers, layered. Precedence: **your `-D` overrides → target defaults →
 generic fallbacks.**
 
-- `include/exception_dump_mips_target.h` — **select the target architecture.**
-  Auto-detects from `__PIC32MM__` / `__PIC32MZ__` / `__PIC32MX__` / `__PIC32MK__`,
-  or force with `EDM_TARGET_*`. Sets per-family defaults:
+- `MIPS/Exception_Dump_Mips/include/exception_dump_mips_target.h` — **select the
+  target architecture.** Auto-detects from
+  `__PIC32MM__` / `__PIC32MZ__` / `__PIC32MX__` / `__PIC32MK__`, or force with
+  `EDM_TARGET_*`. Sets per-family defaults:
 
   | Target | `EDM_CAPTURE_GPR` | `EDM_DUMP_BUFFER_SIZE` | `EDM_ARCH_MICROMIPS` |
   |--------|:-----------------:|:----------------------:|:--------------------:|
@@ -202,13 +237,12 @@ generic fallbacks.**
   | GENERIC | 0 | 512 | 0 |
 
   > **PIC32MM GPR capture:** the default is CP0-only for safety, but full GPR
-  > capture **now works reliably on PIC32MM** — add
-  > `src/exception_dump_mips_vector.S` (assembles as microMIPS) and build with
+  > capture **works reliably on PIC32MM** — add the vector `.S` and build with
   > `-DEDM_CAPTURE_GPR=1`. The vector passes the frame base to the handler in
   > `a2`, so capture no longer depends on the handler's prologue.
 
-- `include/exception_dump_mips_config.h` — generic options:
-  `EDM_MAGIC_CODE`, `EDM_PERSIST_ATTR`, `EDM_INSTALL_GENERAL_HANDLER`,
+- `MIPS/Exception_Dump_Mips/include/exception_dump_mips_config.h` — generic
+  options: `EDM_MAGIC_CODE`, `EDM_PERSIST_ATTR`, `EDM_INSTALL_GENERAL_HANDLER`,
   `EDM_AUTO_RESET_AFTER_CAPTURE`, `EDM_STACK_FRAME_BYTES`, `EDM_CAPTURE_GPR`,
   `EDM_CAPTURE_EXTRA_CP0` (Status+BadVAddr), `EDM_INSTALL_TLB_REFILL_LIVE_UART`.
 
@@ -222,7 +256,7 @@ generic fallbacks.**
 
 ---
 
-## 7. Public API (in `include/exception_dump_mips.h`)
+## 7. Public API (in `MIPS/Exception_Dump_Mips/include/exception_dump_mips.h`)
 
 ```c
 void  exception_dump_mips_init(void);
@@ -241,6 +275,18 @@ the variable to watch.
 
 ## 8. File map
 
+**Example app (repo root):**
+
+| Path | Purpose |
+|------|---------|
+| `README.md` | Full documentation: library docs + this runnable example. |
+| `src/main.c` | Init + Mode B wiring (printf/stdio) + `foo_ex()` crash demo. |
+| `pic32mm_app.X/` | MPLAB X project (device PIC32MM0256GPM064, XC32). |
+| `pic32mm_app.X/analyze_dump.py` | Project-specific dump analyzer (reference for Q6). |
+| `pic32mm_app.X/create_listing.bat` | Project-specific listing generator (reference for Q5). |
+
+**Library (`MIPS/Exception_Dump_Mips/`):**
+
 | Path | Purpose |
 |------|---------|
 | `include/exception_dump_mips.h` | Public API, `exception_dump_mips_t`, callback typedefs. |
@@ -252,10 +298,9 @@ the variable to watch.
 | `src/exception_dump_mips_vector.S` | MIPS general-exception vector (add only if the project has none). |
 | `examples/harmony3_pic32mz_example/` | Wiring to Harmony `SYS_CONSOLE` (Mode B). |
 | `examples/baremetal_pic32_example/` | Bare UART + linker no-init snippet (Mode B). |
-| `tools/create_listing.bat` | Windows batch **template**: ELF → disassembly listing + symbols (adapt per project). |
+| `tools/create_listing.bat` | Windows batch **template**: ELF → disassembly listing + symbols. |
 | `tools/analyze_dump.py` | Python **template**: clipboard dump → WHAT/WHY/WHERE. Self-generates the listing (`xc32-objdump`), resolves `epc`/`ra` to function + file:line (`xc32-addr2line`), full register evaluation, detects unaligned `swl/swr`, flags an ELF/dump build mismatch. |
 | `tools/reading_the_dump.md` | How to locate an exception (`epc`/`ra`/`badvaddr`) in the listing (manual method). |
-| `../../README.md` | Full documentation (repo root): library docs + the runnable PIC32MM example. |
 
 ---
 
@@ -296,12 +341,13 @@ verify in MPLAB X on real hardware.
 ## 11. Disassembly listing tooling (offer per Q5)
 
 To translate a captured dump into an exact source location, the user needs a
-disassembly listing of their firmware. The `tools/` folder holds templates:
+disassembly listing of their firmware. The `MIPS/Exception_Dump_Mips/tools/`
+folder holds templates:
 
 - `tools/create_listing.bat` — runs `xc32-objdump -d -S -l` and
   `xc32-readelf -s` on the project ELF, producing `*.disassembly.txt` and
   `*.symbols.txt`. It has two `ADAPT` lines: the **XC32 bin path** (version
-  differs per install, e.g. `...\xc32\v4.45\bin`) and the **ELF path**
+  differs per install, e.g. `...\xc32\v4.60\bin`) and the **ELF path**
   (`<project>.X\dist\<config>\production\<name>.production.elf`).
 - `tools/analyze_dump.py` — reads a dump from the **clipboard** (or a file) and
   prints WHAT / WHY / WHERE. It **auto-locates the ELF and generates the
@@ -325,14 +371,15 @@ disassembly listing of their firmware. The `tools/` folder holds templates:
 2. Produce a project-specific copy of `create_listing.bat` with those two paths
    filled in (place it in their `.X` folder, or wherever they prefer). Either
    edit the template in place for them or hand them an adapted copy — don't leave
-   the placeholder paths.
+   the placeholder paths. `pic32mm_app.X/create_listing.bat` is a filled-in
+   reference.
 3. Offer to run it once (if a build ELF exists) and, if a real dump is available,
    walk them through `reading_the_dump.md` against their listing.
 
 **If the user declines the batch**, still point them at
-`tools/reading_the_dump.md` — the method works with any disassembly they already
-have (e.g. MPLAB X → Window → Target Memory Views → Disassembly, or an existing
-`.lst`).
+`MIPS/Exception_Dump_Mips/tools/reading_the_dump.md` — the method works with any
+disassembly they already have (e.g. MPLAB X → Window → Target Memory Views →
+Disassembly, or an existing `.lst`).
 
 **When the user accepts the Q6 offer (Python analyzer):**
 1. Copy `tools/analyze_dump.py` into a project-specific version (usually into the
@@ -341,6 +388,7 @@ have (e.g. MPLAB X → Window → Target Memory Views → Disassembly, or an exi
    The tool **generates the listing itself** (`xc32-objdump`) and resolves
    addresses with `xc32-addr2line`, so a separate `DEFAULT_LISTING` (Q5) is not
    required — Q5's `create_listing.bat` is now optional/complementary.
+   `pic32mm_app.X/analyze_dump.py` is a filled-in reference.
 2. If they changed the dump text format, adjust the regexes in `parse_dump()` and
    the register names accordingly.
 3. Confirm their Python (3.x) is available; the analyzer needs no extra packages.
