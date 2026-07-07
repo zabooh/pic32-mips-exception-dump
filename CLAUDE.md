@@ -48,18 +48,42 @@ On your **first response** in a fresh session here, proactively:
 
 1. In 2–3 sentences, tell the user this repo contains the PIC32/MIPS Exception
    Dump library (in `MIPS/Exception_Dump_Mips/`) plus a runnable PIC32MM example
-   they can try in the simulator (see the root `README.md`).
-2. **Offer to integrate the library into their project.** Ask for the path to
-   their MPLAB X project if you don't have it yet.
-3. If they accept, run the **Integration Interview** (§3) *before* editing
-   anything. Do not copy files or change build settings until the mode and
-   target are decided.
+   (`pic32mm_app.X`) that deliberately crashes for demonstration.
+2. **Ask which of the two they want** — do NOT assume they have a project:
+   - **(A) Just try the bundled example** in the MPLAB X Simulator, or
+   - **(B) Integrate the library into their own project.**
 
-Keep it short and concrete — the user is an embedded developer.
+Keep it short and concrete — the user is an embedded developer. Then follow the
+matching path below.
+
+### Path A — try the bundled PIC32MM example (no integration)
+
+The user has no project to change; this repo *is* the runnable demo. Do **not**
+run the Integration Interview or touch build settings. Help them:
+
+1. Open `pic32mm_app.X` in MPLAB X (PIC32MM0256GPM064, XC32) and build/run on the
+   **Simulator** — the quick start is in the root `README.md`
+   ("Play it through in the simulator").
+2. **Simulator prerequisite:** make sure `CLK_Initialize();` stays **commented
+   out** in `src/config/default/initialization.c` — its clock/PLL bring-up polls
+   oscillator-ready / PLL-lock bits the simulator does not model, so the CPU would
+   hang there. (It must be re-enabled for a real-hardware run.)
+3. `main()` calls `foo_ex()`, which faults on purpose. Read the dump either in a
+   Watch window (`edm_dump.msg`, Mode A) or from the **UART1 IO** window after the
+   reset (Mode B).
+4. Copy the dump and run `pic32mm_app.X/analyze_dump.py` (no arguments) to decode
+   it to cause + registers + faulting `file:line`; offer to walk through the
+   result with them. If they then want it in their own project, switch to Path B.
+
+### Path B — integrate the library into the user's own project
+
+Ask for the path to their MPLAB X project if you don't have it yet, then run the
+**Integration Interview** (§3) *before* editing anything. Do not copy files or
+change build settings until the mode and target are decided.
 
 ---
 
-## 3. Integration Interview (ask before integrating)
+## 3. Integration Interview (Path B — ask before integrating)
 
 Ask these questions (use the question tool when available). **Question 1 is the
 most important** and decides the whole integration shape.
