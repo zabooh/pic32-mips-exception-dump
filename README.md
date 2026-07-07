@@ -16,10 +16,21 @@ This repository bundles two things:
    play the whole flow through **in the MPLAB X Simulator** — capture, reset,
    print, and analyze.
 
-As part of the integration a small **Python analyzer** is produced for your
-project: it reads the firmware's exception output (straight from the clipboard or
-a file), regenerates the disassembly listing, decodes the exception, and finds
-and shows the **source-code line that caused it** (function, file path, line).
+There are **two ways to get the dump out of the device:**
+
+- **With a debugger (Mode A):** on the exception the handler halts and you read
+  the captured `edm_dump.msg` string in a Variable/Watch window, then copy it.
+- **Over UART, no debugger (Mode B):** on the exception the dump is stored in
+  persistent (no-init) RAM, the device does a software reset, and on the **next
+  boot** it is printed once over a UART / console. This needs **no debugger at
+  all** — ideal for field units — you just capture the text from the serial
+  terminal instead of the Watch window.
+
+Either way, feed that text to the analyzer. As part of the integration a small
+**Python analyzer** is produced for your project: it reads the firmware's
+exception output (from the clipboard or a file), regenerates the disassembly
+listing, decodes the exception, and finds and shows the **source-code line that
+caused it** (function, file path, line).
 
 ## Table of Contents
 
