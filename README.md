@@ -43,11 +43,12 @@ There are **two ways to get the dump out of the device:**
   all** — ideal for field units — you just capture the text from the serial
   terminal instead of the Watch window.
 
-Either way, feed that text to the analyzer. As part of the integration a small
-**Python analyzer** is produced for your project: it reads the firmware's
-exception output (from the clipboard or a file), regenerates the disassembly
-listing, decodes the exception, and finds and shows the **source-code line that
-caused it** (function, file path, line).
+Either way, feed that text to the analyzer. As part of a Claude Code integration
+the **Python analyzer is adapted to your project** — Claude tailors it to your
+XC32 version and ELF output path so it runs with no arguments. It then reads the
+firmware's exception output (from the clipboard or a file), generates the
+disassembly listing, decodes the exception, and finds and shows the **source-code
+line that caused it** (function, file path, line).
 
 ## Table of Contents
 
