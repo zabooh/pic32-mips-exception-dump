@@ -2,53 +2,68 @@
 
 This repository bundles two things:
 
-1. **The PIC32 / MIPS Exception Dump library** — a small, portable, plain-C
-   library that captures the CPU state at the moment a MIPS/PIC32 firmware crashes
-   on an unhandled CPU exception (the CP0 registers + the full GPR set) and turns
-   that raw dump into a precise, human-readable post-mortem — **down to the exact
-   source line that caused the fault**. It lives in
-   [`MIPS/Exception_Dump_Mips/`](MIPS/Exception_Dump_Mips/) and is
-   framework-independent (XC32 + `<xc.h>` only), reusable across
-   PIC32MX / PIC32MZ / PIC32MZW1 / WFI32 / PIC32MK / **PIC32MM**.
+1. **The [PIC32 / MIPS Exception Dump library](MIPS/Exception_Dump_Mips/)** — a
+   small, portable, plain-C library (core
+   [`exception_dump_mips.c`](MIPS/Exception_Dump_Mips/src/exception_dump_mips.c),
+   [public API](#public-api) in
+   [`exception_dump_mips.h`](MIPS/Exception_Dump_Mips/include/exception_dump_mips.h))
+   that [captures](#what-is-captured) the CPU state at the moment a MIPS/PIC32
+   firmware crashes on an unhandled CPU exception (the CP0 registers + the full
+   GPR set) and turns that raw dump into a precise, human-readable post-mortem —
+   **down to the [exact source line that caused the fault](#worked-example--a-real-capture-analyzed)**.
+   It is framework-independent (XC32 + `<xc.h>` only) and reusable across
+   PIC32MX / PIC32MZ / PIC32MZW1 / WFI32 / PIC32MK / **[PIC32MM](#target-architecture-incl-pic32mm)**.
 
-2. **A ready-to-run PIC32MM example project** (`pic32mm_app.X` + `src/`) that
-   integrates the library and **deliberately crashes** in `foo_ex()` so you can
-   play the whole flow through **in the MPLAB X Simulator** — capture, reset,
-   print, and analyze.
+2. **A ready-to-run PIC32MM example project** — the MPLAB X project
+   [`pic32mm_app.X`](pic32mm_app.X) plus [`src/main.c`](src/main.c), which
+   integrates the library and **deliberately crashes** in `foo_ex()`
+   ([in `main.c`](src/main.c)) so you can
+   [play the whole flow through in the MPLAB X Simulator](#play-it-through-in-the-simulator-quick-start)
+   — capture, [reset, print](#runtime-flow), and
+   [analyze](#worked-example--a-real-capture-analyzed).
 
 **Two ways to work with this project.** To add the library to your *own* firmware
-you can either **read this README carefully** and follow the
-[Integration Steps](#integration-steps) by hand, or **let Claude Code do it**: the
-repo ships a [`CLAUDE.md`](CLAUDE.md) at its root — open the repo in
-[Claude Code](https://claude.com/claude-code) and just run it. Claude then walks
-you through the integration with a short **interview** (capture mode, target
-device, UART transport, handler conflicts) and performs the wiring for you —
-including adapting your MPLAB X project so the files show up in the tree and build.
-See [Use the library in your own project](#use-the-library-in-your-own-project).
+you can either **read this README** and follow the
+[Integration Steps](#integration-steps) by hand, or **let
+[Claude Code](https://claude.com/claude-code) do it**: the repo ships a
+[`CLAUDE.md`](CLAUDE.md) at its root — open the repo in Claude Code and just run
+it. Claude then walks you through a short **interview**
+([capture mode](#capture-modes),
+[target device](#target-architecture-incl-pic32mm), UART transport,
+[handler conflicts](#exception-handler-integration)) and performs the wiring for
+you — including [adapting your MPLAB X project](#use-the-library-in-your-own-project)
+so the files show up in the tree and build.
 
 The Claude Code route has a further payoff **later, when you are actually chasing
 a bug**: Claude already holds the full context — your source, how the library is
-wired in, and (via the analyzer) the decoded dump with cause, registers and the
-faulting `file:line`. So it can go straight from "here is the crash" to genuinely
-**analyzing and fixing the root cause** with you, instead of you re-explaining the
-project from scratch.
+wired in, and (via the [analyzer](#worked-example--a-real-capture-analyzed)) the
+decoded dump with cause, registers and the faulting `file:line`. So it can go
+straight from "here is the crash" to genuinely **analyzing and fixing the root
+cause** with you, instead of you re-explaining the project from scratch.
 
-There are **two ways to get the dump out of the device:**
+There are **two ways to get the dump out of the device** (full comparison in
+[Capture Modes](#capture-modes)):
 
-- **With a debugger (Mode A):** on the exception the handler halts and you read
-  the captured `edm_dump.msg` string in a Variable/Watch window, then copy it.
-- **Over UART, no debugger (Mode B):** on the exception the dump is stored in
-  persistent (no-init) RAM, the device does a software reset, and on the **next
-  boot** it is printed once over a UART / console. This needs **no debugger at
-  all** — ideal for field units — you just capture the text from the serial
-  terminal instead of the Watch window.
+- **With a debugger ([Mode A](#capture-modes)):** on the exception the handler
+  halts and you read the captured `edm_dump.msg` string in a Variable/Watch
+  window, then copy it (see the
+  [Worked Example](#worked-example--a-real-capture-analyzed)).
+- **Over UART, no debugger ([Mode B](#capture-modes)):** the dump is stored in
+  [persistent (no-init) RAM](#persistent-ram--no-init-ram), the device does a
+  software reset, and on the **next boot** it is printed once over a UART /
+  console — **no debugger needed**, ideal for field units.
 
-Either way, feed that text to the analyzer. As part of a Claude Code integration
-the **Python analyzer is adapted to your project** — Claude tailors it to your
-XC32 version and ELF output path so it runs with no arguments. It then reads the
-firmware's exception output (from the clipboard or a file), generates the
-disassembly listing, decodes the exception, and finds and shows the **source-code
-line that caused it** (function, file path, line).
+Either way, feed that text to the analyzer
+([`pic32mm_app.X/analyze_dump.py`](pic32mm_app.X/analyze_dump.py), from the
+template [`tools/analyze_dump.py`](MIPS/Exception_Dump_Mips/tools/analyze_dump.py)).
+As part of a Claude Code integration the **Python analyzer is adapted to your
+project** — Claude tailors it to your XC32 version and ELF output path so it runs
+with no arguments. It reads the exception output, generates the disassembly
+listing (background:
+[`reading_the_dump.md`](MIPS/Exception_Dump_Mips/tools/reading_the_dump.md)),
+decodes the exception, and shows the **source-code line that caused it** (function,
+file path, line) — see the
+[full worked run](#worked-example--a-real-capture-analyzed).
 
 ## Table of Contents
 
